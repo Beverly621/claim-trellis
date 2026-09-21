@@ -1,8 +1,30 @@
 # ClaimTrellis v0.1 decisions and release gates
 
+**Current status: ClaimTrellis v0.1 — Feature Frozen / Private Pre-Release**
+
 The v0.1 product direction is frozen. ClaimTrellis is an independent project and its only
 primary brand. TypeSafe Jev is the first structured judgment provider and part of the
 technical lineage, not the product identity.
+
+## Feature-freeze policy
+
+The product features, external API, data model, CLI commands, provider architecture, and
+six-label judgment system are frozen. The repository must remain private. Do not publish
+to PyPI, create a formal release, or perform promotional activity. New features and
+nonessential dependency upgrades are paused.
+
+Changes during the freeze are limited to:
+
+- bug and security fixes;
+- test, CI, type-checking, and reliability improvements;
+- refactoring that does not change external behavior;
+- documentation and benchmark preparation;
+- UI refactoring explicitly requested by the repository owner; and
+- domain or Vercel deployment configuration explicitly requested by the repository owner.
+
+Do not run or claim the `<1% false-support rate` target without a formally adjudicated,
+held-out benchmark. Do not change the brand, positioning, license, or release strategy
+without an explicit decision from the repository owner.
 
 | Area | v0.1 decision |
 |---|---|
