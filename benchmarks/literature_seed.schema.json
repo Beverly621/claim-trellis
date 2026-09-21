@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/claim-trellis/literature-seed.schema.json",
+  "title": "ClaimTrellis literature seed case",
+  "type": "object",
+  "required": ["case_id", "source", "claim", "evidence", "label", "failure_mode", "evidence_locator"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "required": ["source_id", "title", "journal", "year", "doi", "url", "domain", "checked_at"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "title": {"type": "string"},
+        "journal": {"type": "string"},
+        "year": {"type": "integer", "minimum": 2022, "maximum": 2026},
+        "doi": {"type": "string"},
+        "url": {"type": "string", "format": "uri"},
+        "domain": {"type": "string"},
+        "checked_at": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    },
+    "claim": {"type": "string", "minLength": 3},
+    "evidence": {"type": "string", "minLength": 3},
+    "label": {"enum": ["supports", "partially_supports", "contradicts", "not_addressed", "insufficient_context", "source_unavailable"]},
+    "failure_mode": {"type": "string"},
+    "evidence_locator": {"type": "string"},
+    "annotation_status": {"enum": ["editor_seed", "double_annotated", "adjudicated"]},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}

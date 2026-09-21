@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Auditable claim-to-source verification with human final judgment." />
+    <title>ClaimTrellis</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to audit form</a>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Human-governed evidence review</p>
+        <h1>ClaimTrellis</h1>
+      </div>
+      <div class="health" id="health" aria-live="polite">Checking local service…</div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div>
+          <p class="kicker">One claim. One source. A complete audit trail.</p>
+          <h2>Check what a citation actually supports.</h2>
+          <p class="lede">
+            Retrieval and exact checks run locally. A configured provider makes bounded
+            semantic judgments. You—not the model—record the final decision.
+          </p>
+        </div>
+        <dl class="principles">
+          <div><dt>Default</dt><dd>Fail closed</dd></div>
+          <div><dt>Evidence</dt><dd>Locator preserved</dd></div>
+          <div><dt>Verdict</dt><dd>Human owned</dd></div>
+        </dl>
+      </section>
+
+      <section class="workspace" aria-label="Evidence audit workspace">
+        <form id="audit-form" class="panel form-panel">
+          <div class="panel-heading">
+            <div><span class="step">01</span><h2>New audit</h2></div>
+            <p>Use one atomic English claim and the exact cited source.</p>
+          </div>
+
+          <label>
+            <span>Atomic claim</span>
+            <textarea id="claim" rows="4" required maxlength="20000" placeholder="The treatment reduced the primary composite cardiovascular endpoint."></textarea>
+          </label>
+
+          <div class="form-grid">
+            <label>
+              <span>Citation identifier</span>
+              <input id="citation" maxlength="2000" placeholder="doi:10.1056/NEJMoa2307563" />
+            </label>
+            <label>
+              <span>Available source</span>
+              <select id="access-tier">
+                <option value="full_text">Full text</option>
+                <option value="abstract">Abstract only</option>
+                <option value="excerpt">Excerpt only</option>
+                <option value="unknown">Unknown completeness</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            <span>Claimed quote <small>optional, checked exactly</small></span>
+            <textarea id="quote" rows="2" maxlength="20000" placeholder="Paste the quote the citation is said to rely on."></textarea>
+          </label>
+
+          <label class="file-drop" id="file-drop">
+            <input id="source-file" type="file" accept=".txt,.md,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+            <span class="file-title">Choose the cited source</span>
+            <span id="file-name">TXT, Markdown, PDF, or DOCX · maximum 25 MB</span>
+          </label>
+
+          <label class="check-row">
+            <input id="use-provider" type="checkbox" checked />
+            <span>Use the configured structured judgment provider</span>
+          </label>
+
+          <div class="form-actions">
+            <button type="submit" class="primary" id="submit-button">Run audit</button>
+            <p id="form-status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+
+        <aside class="panel guidance">
+          <div class="panel-heading">
+            <div><span class="step">02</span><h2>Review standard</h2></div>
+          </div>
+          <ol>
+            <li><strong>Confirm identity.</strong> Is this the source the author intended?</li>
+            <li><strong>Inspect context.</strong> Read before and after the selected passage.</li>
+            <li><strong>Check boundaries.</strong> Population, endpoint, time, and causal strength matter.</li>
+            <li><strong>Own the result.</strong> Record a decision and explain it.</li>
+          </ol>
+          <p class="caution">A green proposal is not a final verdict. It remains unreviewed until a person signs it.</p>
+        </aside>
+      </section>
+
+      <section id="result" class="result" hidden aria-live="polite"></section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <div><span class="step">03</span><h2>Local audit history</h2></div>
+          <button id="refresh-history" class="secondary" type="button">Refresh</button>
+        </div>
+        <div id="history" class="history"><p class="muted">No local audits loaded.</p></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>ClaimTrellis local alpha · semantic proposals require human confirmation.</p>
+      <nav><a href="/docs">API docs</a><a href="/redoc">API reference</a></nav>
+    </footer>
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>

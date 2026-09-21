@@ -1,0 +1,20 @@
+services:
+  claim-trellis:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CLAIM_TRELLIS_HOST: 0.0.0.0
+      CLAIM_TRELLIS_PORT: "8000"
+      CLAIM_TRELLIS_DATA_DIR: /data
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+    volumes:
+      - claim-trellis-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  claim-trellis-data:
