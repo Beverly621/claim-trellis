@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claim-trellis"
+version = "0.1.0"
+description = "Auditable claim-to-source verification with human final judgment."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "ClaimTrellis contributors" }]
+keywords = ["citation-verification", "claim-verification", "research-integrity", "jev"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+dependencies = [
+  "fastapi>=0.115,<1",
+  "httpx>=0.28,<1",
+  "pydantic>=2.10,<3",
+  "pydantic-settings>=2.7,<3",
+  "pypdf>=5.1,<7",
+  "python-docx>=1.1,<2",
+  "python-multipart>=0.0.20,<1",
+  "rich>=13.9,<15",
+  "typer>=0.15,<1",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Beverly621/claim-trellis"
+Repository = "https://github.com/Beverly621/claim-trellis"
+Issues = "https://github.com/Beverly621/claim-trellis/issues"
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<1",
+  "pytest-cov>=6,<8",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+claim-trellis = "claim_trellis.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claim_trellis"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"web" = "claim_trellis/web"
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers --disable-warnings"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/claim_trellis/cli.py" = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["claim_trellis"]
