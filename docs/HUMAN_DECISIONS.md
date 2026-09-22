@@ -26,6 +26,23 @@ Do not run or claim the `<1% false-support rate` target without a formally adjud
 held-out benchmark. Do not change the brand, positioning, license, or release strategy
 without an explicit decision from the repository owner.
 
+## Repository development route
+
+The repository remains private until the owner explicitly approves public release. The
+default branch follows the standard safety policy for a mature repository:
+
+- never force-push or delete `main`;
+- develop every change on a separate branch and merge it through a pull request;
+- require the `test` CI check to pass before merging;
+- do not merge nonessential Dependabot upgrades during the feature freeze; and
+- do not make the repository public merely to obtain branch-protection features.
+
+If server-enforced protection is required while the repository is private, the owner may
+upgrade to a GitHub plan that supports private-repository rulesets. Immediately before an
+approved public transition, configure `main` to require pull requests, the `test` status
+check, resolved conversations, linear history, and blocked force-pushes and deletions. A
+second-person approval is not required while the project has a single maintainer.
+
 | Area | v0.1 decision |
 |---|---|
 | Display name | ClaimTrellis |
