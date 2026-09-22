@@ -101,3 +101,27 @@ Vercel ephemeral `/tmp` storage is not durable, shared multi-instance storage. T
 does not change hosting or introduce authentication: do not use a public shared instance
 for confidential sources or rely on its temporary history as a durable research archive.
 Downgrade by restoring the pre-upgrade database backup, not by deleting lifecycle tables.
+
+## UI v1.1 refinement
+
+The owner-requested v1.1 pass keeps the v1 information architecture and backend contract.
+It reduces the dominant surface to claim, source, selected evidence, proposal and human
+action. Deterministic checks, policy rationale, proposal history and provenance use native
+disclosures; lifecycle summary is separate from the complete append-only audit view.
+
+The typography system has four roles: bold system grotesk for display, neutral system sans
+for controls and body UI, Georgia as a restrained editorial serif for evidence and research
+guidance, and system mono only for IDs, versions, locators, timestamps and probabilities.
+Near-black, paper white and neutral gray dominate. The cool accent is reserved for focus,
+selected evidence, current proposals and primary actions. No font, component or runtime
+dependency was added.
+
+A single accessible guidance dialog serves evidence, relation, check, action and timeline
+help. Its warm paper treatment distinguishes the research handbook from the instrument UI.
+The native dialog supports Escape, focus restoration and backdrop dismissal; on mobile it
+becomes a bottom sheet. The compact mobile navigation and all added help controls meet a
+44-pixel touch target. Reduced-motion behavior remains unchanged.
+
+The API still requires non-empty notes for all four human actions. The refined UI communicates
+that Revise and Reject need substantive feedback while Accept and Defer can use a short note;
+it does not weaken or misrepresent the current validation contract.
