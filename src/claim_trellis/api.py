@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from claim_trellis import __version__
@@ -16,13 +16,16 @@ from claim_trellis.models import (
     AuditRequest,
     ClaimAudit,
     EvidenceSearchRequest,
-    HumanReview,
     HumanReviewRequest,
     ParsedDocument,
+    ProposalVersion,
     RetrievedCandidate,
+    RevisionRequest,
+    RevisionRun,
 )
 from claim_trellis.retrieval import retrieve
-from claim_trellis.storage import AuditStore
+from claim_trellis.revisions import revise
+from claim_trellis.storage import AuditStore, LifecycleConflict
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -36,6 +39,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.store = store
+    app.state.judgment_provider = None
+
+    @app.exception_handler(LifecycleConflict)
+    async def lifecycle_conflict(request: Request, exc: LifecycleConflict) -> JSONResponse:
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
 
     @app.get("/healthz")
     def health() -> dict[str, object]:
@@ -78,7 +86,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         database: AuditStore = app.state.store
         if len(request.source_text) > active.max_source_chars:
             raise HTTPException(status_code=413, detail="Source text exceeds the configured limit.")
-        audit = await run_audit(request, active)
+        audit = await run_audit(request, active, judgment_provider=app.state.judgment_provider)
         return database.save(audit)
 
     @app.get("/api/v1/audits", response_model=list[ClaimAudit])
@@ -100,13 +108,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: HumanReviewRequest,
     ) -> ClaimAudit:
         database: AuditStore = app.state.store
-        updated = database.add_review(
-            audit_id,
-            HumanReview(decision=request.decision, notes=request.notes, reviewer=request.reviewer),
-        )
-        if updated is None:
+        if database.get(audit_id) is None:
             raise HTTPException(status_code=404, detail="Audit not found.")
-        return updated
+        return database.review(audit_id, request)
+
+    @app.get("/api/v1/audits/{audit_id}/proposals", response_model=list[ProposalVersion])
+    def proposal_history(audit_id: str) -> list[ProposalVersion]:
+        get_audit(audit_id)
+        return store.proposals(audit_id)
+
+    @app.get("/api/v1/audits/{audit_id}/proposals/current", response_model=ProposalVersion)
+    def current_proposal(audit_id: str) -> ProposalVersion:
+        return proposal_history(audit_id)[-1]
+
+    @app.get("/api/v1/audits/{audit_id}/revisions", response_model=list[RevisionRun])
+    def revision_history(audit_id: str) -> list[RevisionRun]:
+        get_audit(audit_id)
+        return store.revisions(audit_id)
+
+    @app.post("/api/v1/audits/{audit_id}/revisions", response_model=RevisionRun)
+    async def request_revision(audit_id: str, request: RevisionRequest) -> RevisionRun:
+        get_audit(audit_id)
+        return await revise(
+            store, audit_id, request, resolved_settings, app.state.judgment_provider
+        )
 
     @app.get("/api/v1/audits/{audit_id}/events", response_model=list[AuditEvent])
     def audit_events(audit_id: str) -> list[AuditEvent]:

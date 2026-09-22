@@ -7,6 +7,7 @@ from claim_trellis.models import (
     ChoiceJudgment,
     JudgmentResult,
     NoulJudgment,
+    RevisionContext,
     SourceAccessTier,
     SourceMetadata,
 )
@@ -22,7 +23,12 @@ class StubProvider:
     question_set_version = "test-questions-v1"
 
     async def evaluate(
-        self, claim: str, evidence: str, citation: str | None = None
+        self,
+        claim: str,
+        evidence: str,
+        citation: str | None = None,
+        *,
+        revision_context: RevisionContext | None = None,
     ) -> JudgmentResult:
         return JudgmentResult(
             provider=self.provider_name,

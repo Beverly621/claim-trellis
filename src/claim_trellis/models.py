@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 
 def utc_now() -> datetime:
@@ -41,6 +41,24 @@ class HumanDecision(StrEnum):
     REJECT = "reject"
     REVISE = "revise"
     DEFER = "defer"
+
+
+class ReviewStatus(StrEnum):
+    PENDING = "pending_review"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    DEFERRED = "deferred"
+    REQUESTED = "revision_requested"
+    RUNNING = "revision_running"
+    FAILED = "revision_failed"
+    SUPERSEDED = "superseded"
+
+
+class RevisionStatus(StrEnum):
+    REQUESTED = "revision_requested"
+    RUNNING = "revision_running"
+    FAILED = "revision_failed"
+    COMPLETED = "revision_completed"
 
 
 class SourceMetadata(BaseModel):
@@ -123,6 +141,7 @@ class JudgmentResult(BaseModel):
     latency_ms: float = Field(ge=0)
     retry_count: int = Field(ge=0)
     raw_answers: dict[str, Any]
+    judgment_summary: str | None = Field(default=None, max_length=2000)
 
     @field_validator("relation")
     @classmethod
@@ -144,6 +163,8 @@ class HumanReview(BaseModel):
     notes: str = Field(min_length=1, max_length=10_000)
     reviewer: str = Field(min_length=1, max_length=200)
     created_at: datetime = Field(default_factory=utc_now)
+    proposal_id: str | None = None
+    proposal_version: int | None = None
 
 
 class Provenance(BaseModel):
@@ -168,6 +189,62 @@ class ClaimAudit(BaseModel):
     human_review: HumanReview | None = None
     provenance: Provenance
     service_errors: list[str] = Field(default_factory=list)
+    current_proposal_id: str | None = None
+    current_proposal_version: int = 1
+    review_status: ReviewStatus = ReviewStatus.PENDING
+    state_revision: int = 0
+
+
+class ProposalVersion(BaseModel):
+    """Immutable judgment snapshot; review_status is a separately stored projection."""
+
+    model_config = ConfigDict(frozen=True)
+    audit_id: str
+    proposal_id: str
+    version: int
+    parent_proposal_id: str | None = None
+    relation: RelationLabel | None = None
+    probabilities: dict[str, float] = Field(default_factory=dict)
+    policy: Proposal
+    judgment: JudgmentResult | None = None
+    created_at: datetime = Field(default_factory=utc_now)
+    review_status: ReviewStatus = ReviewStatus.PENDING
+
+
+class RevisionContext(BaseModel):
+    previous_proposal: ProposalVersion
+    deterministic_checks: DeterministicChecks
+    source_completeness: SourceAccessTier
+    human_feedback: str
+    revision_number: int
+
+
+class RevisionRequest(BaseModel):
+    proposal_id: str = Field(min_length=1, max_length=100)
+    proposal_version: int = Field(ge=1)
+    expected_state_revision: int = Field(ge=0)
+    idempotency_key: str = Field(min_length=8, max_length=100)
+    reviewer: str = Field(min_length=1, max_length=200)
+    feedback: str = Field(min_length=1, max_length=10000)
+
+    @field_validator("reviewer", "feedback")
+    @classmethod
+    def require_nonblank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Must not be blank.")
+        return value
+
+
+class RevisionRun(BaseModel):
+    revision_id: str
+    audit_id: str
+    request: RevisionRequest
+    status: RevisionStatus
+    created_at: datetime
+    updated_at: datetime
+    result_proposal_id: str | None = None
+    error_code: str | None = None
+    error_message: str | None = None
 
 
 class AuditRequest(BaseModel):
@@ -190,6 +267,20 @@ class HumanReviewRequest(BaseModel):
     decision: HumanDecision
     notes: str = Field(min_length=1, max_length=10_000)
     reviewer: str = Field(min_length=1, max_length=200)
+    proposal_id: str | None = None
+    proposal_version: int | None = Field(default=None, ge=1)
+    expected_state_revision: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def validate_reference(self) -> HumanReviewRequest:
+        refs = (self.proposal_id, self.proposal_version, self.expected_state_revision)
+        if any(item is not None for item in refs) and not all(item is not None for item in refs):
+            raise ValueError(
+                "Supply proposal_id, proposal_version and expected_state_revision together."
+            )
+        if not self.notes.strip() or not self.reviewer.strip():
+            raise ValueError("Reviewer and notes must not be blank.")
+        return self
 
 
 class AuditEvent(BaseModel):
@@ -198,6 +289,8 @@ class AuditEvent(BaseModel):
     event_type: str
     created_at: datetime
     payload: dict[str, Any]
+    proposal_id: str | None = None
+    proposal_version: int | None = None
 
 
 class ParsedCitationSentence(BaseModel):

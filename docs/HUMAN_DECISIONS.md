@@ -1,6 +1,6 @@
 # ClaimTrellis v0.1 decisions and release gates
 
-**Current status: ClaimTrellis v0.1 — Feature Frozen / Private Pre-Release**
+**Current status: ClaimTrellis v0.1 — Feature Frozen / Public Pre-Release**
 
 The v0.1 product direction is frozen. ClaimTrellis is an independent project and its only
 primary brand. TypeSafe Jev is the first structured judgment provider and part of the
@@ -9,7 +9,8 @@ technical lineage, not the product identity.
 ## Feature-freeze policy
 
 The product features, external API, data model, CLI commands, provider architecture, and
-six-label judgment system are frozen. The repository must remain private. Do not publish
+six-label judgment system are frozen after the authorized exception below. The owner has
+confirmed the repository is now public. Do not publish
 to PyPI, create a formal release, or perform promotional activity. New features and
 nonessential dependency upgrades are paused.
 
@@ -28,8 +29,9 @@ without an explicit decision from the repository owner.
 
 ## Repository development route
 
-The repository remains private until the owner explicitly approves public release. The
-default branch follows the standard safety policy for a mature repository:
+The owner confirmed public visibility and working Cloudflare/DNS/Vercel infrastructure.
+This UI/review change does not alter that infrastructure or authorize a production deployment.
+The default branch follows the standard safety policy for a mature repository:
 
 - never force-push or delete `main`;
 - develop every change on a separate branch and merge it through a pull request;
@@ -37,11 +39,22 @@ default branch follows the standard safety policy for a mature repository:
 - do not merge nonessential Dependabot upgrades during the feature freeze; and
 - do not make the repository public merely to obtain branch-protection features.
 
-If server-enforced protection is required while the repository is private, the owner may
-upgrade to a GitHub plan that supports private-repository rulesets. Immediately before an
-approved public transition, configure `main` to require pull requests, the `test` status
-check, resolved conversations, linear history, and blocked force-pushes and deletions. A
+Keep `main` protected with pull requests, the `test` status check, resolved conversations,
+linear history, and blocked force-pushes and deletions. A
 second-person approval is not required while the project has a single maintainer.
+
+## Authorized v0.1 exception: UI and proposal revision loop
+
+The owner authorized UI Design v1 and the minimum backend changes for versioned provider
+proposals, human feedback, accept/reject/revise/defer, optimistic concurrency, idempotency,
+failure recovery, and append-only lifecycle events. Six relation labels, CLI commands,
+provider abstraction, brand, and license remain unchanged. No new dependencies are required.
+
+This exception ends with the implementation on `codex/ui-design-v1`; further features
+remain frozen. Review the PR before merging. No PyPI publication, formal Release,
+production configuration change, or production deployment is authorized by this exception.
+The owner's current public-repository update supersedes the older private-only wording
+in the exception brief. See [the implementation contract](UI_AND_REVIEW_V1.md).
 
 | Area | v0.1 decision |
 |---|---|

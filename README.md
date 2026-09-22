@@ -42,6 +42,8 @@ Read [the trust specification](docs/TRUST_SPEC.md) before deploying the software
 - Distinguish `supports`, `partially_supports`, `contradicts`, `not_addressed`,
   `insufficient_context`, and `source_unavailable`.
 - Apply a fail-closed decision policy and capture a final human review separately.
+- Accept, reject, defer, or request a new provider proposal with human feedback; retain
+  every proposal version and protect against stale or concurrent review actions.
 - Persist audits in local SQLite with append-only audit events.
 - Run through a CLI, REST API, or the included accessible review interface.
 - Evaluate predictions with accuracy, per-label precision/recall/F1, Brier score, expected
@@ -100,9 +102,15 @@ claim-trellis benchmark score \
 - `POST /api/v1/audits` — run deterministic and optional Jev checks.
 - `GET /api/v1/audits/{audit_id}` — retrieve the full audit record.
 - `POST /api/v1/audits/{audit_id}/reviews` — record the human decision.
+- `POST /api/v1/audits/{audit_id}/revisions` — re-evaluate with feedback and an idempotency key.
+- `GET /api/v1/audits/{audit_id}/proposals/current` — inspect the current proposal.
+- `GET /api/v1/audits/{audit_id}/proposals` — inspect all proposal versions and lifecycle states.
+- `GET /api/v1/audits/{audit_id}/revisions` — inspect revision attempts, including failures.
 - `GET /api/v1/audits/{audit_id}/events` — retrieve the append-only audit trail.
 
 Interactive API documentation is available at `/docs` while the service is running.
+See [UI and review-loop contracts](docs/UI_AND_REVIEW_V1.md) for concurrency, migration,
+and compatibility details.
 
 ## Seed literature benchmark
 
@@ -127,8 +135,9 @@ docs/                   Trust, architecture, evaluation, privacy, and threat mod
 ## Security and privacy
 
 Documents may be confidential or copyrighted. ClaimTrellis defaults to local parsing,
-local persistence, and no telemetry. When the Jev adapter is enabled, only the claim and
-selected passage are sent to TypeSafe. Review provider terms and institutional policy
+local persistence, and no telemetry. When the Jev adapter is enabled, the claim,
+selected passage, and citation context are sent to TypeSafe. Revisions also transmit
+human feedback, previous judgment, and deterministic-check context. Review provider terms and institutional policy
 before processing unpublished or protected material. See [SECURITY.md](SECURITY.md) and
 [docs/PRIVACY.md](docs/PRIVACY.md). The initial dependency and source review is recorded in
 [docs/DEPENDENCY_PROVENANCE.md](docs/DEPENDENCY_PROVENANCE.md).
