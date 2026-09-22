@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from claim_trellis.models import JudgmentResult
+from claim_trellis.models import JudgmentResult, RevisionContext
 
 
 class ProviderError(RuntimeError):
@@ -17,5 +17,10 @@ class JudgmentProvider(Protocol):
     question_set_version: str
 
     async def evaluate(
-        self, claim: str, evidence: str, citation: str | None = None
+        self,
+        claim: str,
+        evidence: str,
+        citation: str | None = None,
+        *,
+        revision_context: RevisionContext | None = None,
     ) -> JudgmentResult: ...

@@ -3,116 +3,557 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Auditable claim-to-source verification with human final judgment." />
-    <title>ClaimTrellis</title>
+    <meta
+      name="description"
+      content="Auditable claim-to-source verification with human final judgment."
+    />
+    <meta name="theme-color" content="#080b0c" />
+    <title>ClaimTrellis — Follow the evidence.</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/mark.svg" />
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to audit form</a>
+    <a class="skip-link" href="#workspace">Skip to audit workspace</a>
     <header class="site-header">
-      <div>
-        <p class="eyebrow">Human-governed evidence review</p>
-        <h1>ClaimTrellis</h1>
-      </div>
-      <div class="health" id="health" aria-live="polite">Checking local service…</div>
+      <a class="brand" href="#" aria-label="ClaimTrellis home"
+        ><img
+          src="/assets/mark.svg"
+          width="26"
+          height="26"
+          alt=""
+        />ClaimTrellis<span class="alpha">v0.1</span></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#product">Product</a><a href="#method">Method</a
+        ><a href="#benchmark">Benchmark</a><a href="/docs">Docs ↗</a
+        ><a href="https://github.com/Beverly621/claim-trellis">GitHub ↗</a>
+      </nav>
+      <a class="nav-cta" href="#workspace">Open console <span>↗</span></a>
     </header>
-
-    <main id="main">
-      <section class="hero">
-        <div>
-          <p class="kicker">One claim. One source. A complete audit trail.</p>
-          <h2>Check what a citation actually supports.</h2>
-          <p class="lede">
-            Retrieval and exact checks run locally. A configured provider makes bounded
-            semantic judgments. You—not the model—record the final decision.
-          </p>
+    <main>
+      <section class="hero shell" id="product">
+        <div class="hero-top">
+          <span class="eyebrow"
+            ><i class="live-dot"></i> Verification, with a paper trail.</span
+          ><span class="mono small">INDEPENDENT / OPEN SOURCE</span>
         </div>
-        <dl class="principles">
-          <div><dt>Default</dt><dd>Fail closed</dd></div>
-          <div><dt>Evidence</dt><dd>Locator preserved</dd></div>
-          <div><dt>Verdict</dt><dd>Human owned</dd></div>
-        </dl>
+        <h1 class="wordmark">CLAIM<span>TRELLIS</span><sup>↗</sup></h1>
+        <div class="hero-content">
+          <div class="hero-copy">
+            <p class="hero-title">
+              Follow the evidence.<br /><span>Own the judgment.</span>
+            </p>
+            <p class="lede">
+              Auditable claim-to-source verification<br />with human final
+              judgment.
+            </p>
+            <p class="muted">
+              Trace claims to evidence. Inspect what sources actually support.
+              Preserve every decision.
+            </p>
+            <div class="actions">
+              <a class="button primary magnetic" href="#workspace"
+                >Run an audit <span>↗</span></a
+              ><a class="text-link" href="#method"
+                >Explore the method <span>↓</span></a
+              >
+            </div>
+            <div class="hero-footnote">
+              <span>[ 01 — 06 ]</span> Six relations. One accountable process.
+            </div>
+          </div>
+          <div
+            class="trellis"
+            aria-label="Illustrative claim-to-source connection diagram"
+          >
+            <div class="trellis-grid"></div>
+            <svg class="trellis-art" viewBox="0 0 640 400" aria-hidden="true">
+              <defs>
+                <linearGradient id="thread" x1="0" x2="1">
+                  <stop stop-color="#92eddd" stop-opacity=".08" />
+                  <stop offset=".48" stop-color="#92eddd" />
+                  <stop offset="1" stop-color="#92eddd" stop-opacity=".15" />
+                </linearGradient>
+              </defs>
+              <g
+                class="threads"
+                fill="none"
+                stroke="url(#thread)"
+                stroke-width=".75"
+              ></g>
+              <g stroke="#93eddf" fill="#0b1113">
+                <path d="M60 200H160M480 200H580" stroke-dasharray="3 6" />
+                <circle cx="320" cy="200" r="72" opacity=".3" />
+                <circle cx="320" cy="200" r="100" opacity=".12" />
+                <circle cx="60" cy="200" r="5" />
+                <circle cx="580" cy="200" r="5" />
+              </g>
+              <g class="orbit-dot" fill="#b2ffee">
+                <circle cx="320" cy="128" r="3" />
+              </g>
+              <text
+                x="320"
+                y="193"
+                text-anchor="middle"
+                fill="#b2ffee"
+                font-size="13"
+                letter-spacing="4"
+              >
+                SOURCE
+              </text>
+              <text
+                x="320"
+                y="213"
+                text-anchor="middle"
+                fill="#768d87"
+                font-size="9"
+                letter-spacing="2"
+              >
+                CONTEXT PRESERVED
+              </text>
+            </svg>
+            <div class="node node-claim">
+              <span class="micro">[01] CLAIM</span>
+              <p>The method improves<br />retrieval accuracy.</p>
+              <i></i>
+            </div>
+            <div class="node node-source">
+              <span class="micro">[02] EVIDENCE LOCATED</span>
+              <p>“…on the secondary task.”</p>
+              <span class="mono small">¶ 04 · Results · 216–384</span>
+            </div>
+            <div class="node node-judgment">
+              <span class="micro">[03] PROPOSED RELATION</span>
+              <p>partially_supports <span>↗</span></p>
+              <div class="mini-bar"><i></i></div>
+            </div>
+            <div class="trellis-caption">
+              <span class="crosshair">+</span> ILLUSTRATIVE SYSTEM MAP
+              <span>HUMAN REVIEW REQUIRED</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-bottom">
+          <span>LOCAL EVIDENCE. STRUCTURED JUDGMENT. HUMAN CONTROL.</span
+          ><button type="button" id="motion-toggle" aria-pressed="false">
+            Pause motion <span>Ⅱ</span></button
+          ><a href="#method" aria-label="Scroll to method">SCROLL TO TRACE ↓</a>
+        </div>
       </section>
 
-      <section class="workspace" aria-label="Evidence audit workspace">
-        <form id="audit-form" class="panel form-panel">
-          <div class="panel-heading">
-            <div><span class="step">01</span><h2>New audit</h2></div>
-            <p>Use one atomic English claim and the exact cited source.</p>
+      <section class="method-section shell" id="method">
+        <div class="section-label">
+          <span>01 / THE METHOD</span
+          ><span>A SOURCE IS MORE THAN A CITATION.</span>
+        </div>
+        <div class="editorial-heading reveal">
+          <h2>
+            ONE CLAIM.<br />ONE SOURCE.<br /><span class="dim"
+              >ONE AUDIT TRAIL.</span
+            >
+          </h2>
+          <p>
+            From a sentence to a defensible record. Each layer has a job. Each
+            decision leaves a trace.
+          </p>
+        </div>
+        <div class="pipeline">
+          <article class="pipeline-card" style="--step: 0">
+            <div class="pipeline-title">
+              <span class="step-number">01</span
+              ><span class="micro">DETERMINISTIC RETRIEVAL</span>
+              <h3>RETRIEVE<span>↗</span></h3>
+              <p>Locate the evidence.</p>
+            </div>
+            <div class="pipeline-detail">
+              <div class="source-sheet">
+                <span class="micro">SOURCE EXCERPT / ILLUSTRATIVE</span>
+                <p>
+                  The method improved retrieval accuracy<br /><mark
+                    >on the secondary task.</mark
+                  >
+                </p>
+                <div class="sheet-footer">
+                  <span>¶ 04 / RESULTS</span><span>[216 : 384]</span>
+                </div>
+              </div>
+              <p class="muted small">
+                A local lexical ranker selects candidate passages.<br />Source
+                locators stay attached.
+              </p>
+            </div>
+          </article>
+          <article class="pipeline-card" style="--step: 1">
+            <div class="pipeline-title">
+              <span class="step-number">02</span
+              ><span class="micro">EXACT CHECKS</span>
+              <h3>CHECK<span>⌗</span></h3>
+              <p>Put the details under scrutiny.</p>
+            </div>
+            <div class="pipeline-detail">
+              <div class="instrument-row">
+                <span>Quoted passage</span
+                ><span class="accent">Located ↗</span>
+              </div>
+              <div class="instrument-row">
+                <span>Numeric tokens</span
+                ><span class="accent">Compared ↗</span>
+              </div>
+              <div class="instrument-row">
+                <span>Claim / source hashes</span
+                ><span class="accent">Recorded ↗</span>
+              </div>
+              <p class="muted small">
+                Quote matching and numeric comparison run in code.<br />Identity
+                and scientific context still require review.
+              </p>
+            </div>
+          </article>
+          <article class="pipeline-card" style="--step: 2">
+            <div class="pipeline-title">
+              <span class="step-number">03</span
+              ><span class="micro">STRUCTURED JUDGMENT</span>
+              <h3>JUDGE<span>∴</span></h3>
+              <p>A relation, with uncertainty intact.</p>
+            </div>
+            <div class="pipeline-detail">
+              <p class="large-relation">
+                partially_<br /><span class="accent">supports</span>
+              </p>
+              <p class="muted small">
+                The provider compares scope, population, causal strength,<br />and
+                context. Probabilities remain visible.
+              </p>
+            </div>
+          </article>
+          <article class="pipeline-card" style="--step: 3">
+            <div class="pipeline-title">
+              <span class="step-number">04</span
+              ><span class="micro">HUMAN INTERVENTION</span>
+              <h3>REVIEW<span>↺</span></h3>
+              <p>Your feedback changes the next question.</p>
+            </div>
+            <div class="pipeline-detail">
+              <div class="feedback-sample">
+                <span class="micro">HUMAN GUIDANCE / ILLUSTRATIVE</span>
+                <p>
+                  “Reconsider the scope.<br />The evidence only describes the
+                  secondary task.”
+                </p>
+              </div>
+              <div class="review-loop mono">
+                PROPOSAL V1 <span>→</span> FEEDBACK <span>→</span> PROPOSAL V2
+              </div>
+              <p class="muted small">
+                Accept, revise, reject or defer. A person owns the final
+                decision.
+              </p>
+            </div>
+          </article>
+          <article class="pipeline-card" style="--step: 4">
+            <div class="pipeline-title">
+              <span class="step-number">05</span
+              ><span class="micro">APPEND-ONLY RECORD</span>
+              <h3>PRESERVE<span>⤓</span></h3>
+              <p>Keep the whole story.</p>
+            </div>
+            <div class="pipeline-detail">
+              <div class="record-preview mono">
+                <p><span>proposal.created</span><span>v1</span></p>
+                <p><span>feedback.recorded</span><span>human</span></p>
+                <p><span>revision.completed</span><span>v2</span></p>
+                <p class="accent">
+                  <span>review.accepted</span><span>recorded</span>
+                </p>
+              </div>
+              <p class="muted small">
+                Previous judgments and human actions stay in the record.<br />Illustrative
+                lifecycle — no model performance claim.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="relations-section shell" id="relations">
+        <div class="section-label">
+          <span>02 / RELATION INDEX</span
+          ><span>SIX OUTCOMES. NO FORCED CERTAINTY.</span>
+        </div>
+        <h2 class="section-title reveal">
+          SIX WAYS A SOURCE<br /><span class="dim">CAN RELATE TO A CLAIM.</span>
+        </h2>
+        <div class="relation-explorer">
+          <div
+            id="relation-options"
+            class="relation-options"
+            role="tablist"
+            aria-label="Six source relations"
+          ></div>
+          <div
+            id="relation-detail"
+            class="relation-detail"
+            role="tabpanel"
+            tabindex="0"
+          ></div>
+        </div>
+      </section>
+
+      <section class="record-section shell" id="record">
+        <div class="section-label">
+          <span>03 / AUDITABILITY</span><span>EVERY VERSION COUNTS.</span>
+        </div>
+        <div class="record-layout">
+          <div class="reveal">
+            <h2 class="section-title">
+              NOT JUST<br />AN ANSWER.<br /><span class="outline"
+                >A RECORD.</span
+              >
+            </h2>
+            <p class="muted">
+              Who judged it. What they read. Where they disagreed.<br />A result
+              you can inspect, question and revisit.
+            </p>
+            <a class="text-link" href="#workspace"
+              >Open the evidence console ↗</a
+            >
           </div>
+          <div class="forensic">
+            <div class="forensic-head">
+              <span class="live-dot"></span> RECORD ANATOMY
+              <span class="muted">SPECIMEN / NOT A LIVE AUDIT</span>
+            </div>
+            <dl>
+              <div>
+                <dt>01 / CLAIM</dt>
+                <dd>Original statement + identifier</dd>
+              </div>
+              <div>
+                <dt>02 / SOURCE</dt>
+                <dd>Citation · completeness · SHA-256</dd>
+              </div>
+              <div>
+                <dt>03 / EVIDENCE</dt>
+                <dd>Passage · locator · character offsets</dd>
+              </div>
+              <div>
+                <dt>04 / JUDGMENT</dt>
+                <dd>Relation · probabilities · provider</dd>
+              </div>
+              <div>
+                <dt>05 / VERSION</dt>
+                <dd>Model · question set · policy</dd>
+              </div>
+              <div>
+                <dt>06 / REVIEW</dt>
+                <dd>Feedback · action · reviewer · time</dd>
+              </div>
+              <div>
+                <dt>07 / HISTORY</dt>
+                <dd>Every proposal. Every intervention.</dd>
+              </div>
+            </dl>
+            <div class="forensic-foot">
+              [ NO SILENT OVERWRITES ]<span>+</span>
+            </div>
+          </div>
+        </div>
+        <div class="principles">
+          <article>
+            <span class="micro">I / UNCERTAINTY</span>
+            <h3>FAIL<br />CLOSED.</h3>
+            <p>Incomplete evidence stays unresolved.</p>
+          </article>
+          <article>
+            <span class="micro">II / ACCOUNTABILITY</span>
+            <h3>HUMAN<br />OWNED.</h3>
+            <p>The model proposes. A person decides.</p>
+          </article>
+          <article>
+            <span class="micro">III / TRACEABILITY</span>
+            <h3>LOCATOR<br />PRESERVED.</h3>
+            <p>Follow the conclusion back to its source.</p>
+          </article>
+        </div>
+      </section>
 
-          <label>
-            <span>Atomic claim</span>
-            <textarea id="claim" rows="4" required maxlength="20000" placeholder="The treatment reduced the primary composite cardiovascular endpoint."></textarea>
-          </label>
-
-          <div class="form-grid">
-            <label>
-              <span>Citation identifier</span>
-              <input id="citation" maxlength="2000" placeholder="doi:10.1056/NEJMoa2307563" />
-            </label>
-            <label>
-              <span>Available source</span>
-              <select id="access-tier">
+      <section class="workspace-section" id="workspace">
+        <div class="shell">
+          <div class="section-label">
+            <span>04 / THE WORKSPACE</span
+            ><span id="health" role="status">Connecting to service…</span>
+          </div>
+          <div class="workspace-heading">
+            <h2>Evidence Console<span class="accent">.</span></h2>
+            <p class="muted">
+              One atomic English claim. Its cited source.<br />A decision you
+              can stand behind.
+            </p>
+          </div>
+          <form id="audit-form" class="audit-form">
+            <div class="input-pane">
+              <div class="pane-heading">
+                <span class="micro">01 / CLAIM</span
+                ><span class="muted small"
+                  >Be specific. Keep the qualifiers.</span
+                >
+              </div>
+              <label for="claim">Atomic claim</label
+              ><textarea
+                id="claim"
+                rows="4"
+                minlength="3"
+                maxlength="20000"
+                required
+                placeholder="What does the written claim say?"
+              ></textarea>
+              <label for="citation"
+                >Citation identifier <span>optional</span></label
+              ><input
+                id="citation"
+                maxlength="2000"
+                placeholder="DOI, PMID or citation marker"
+              />
+              <label for="quote"
+                >Claimed quote <span>optional · checked exactly</span></label
+              ><textarea
+                id="quote"
+                rows="2"
+                maxlength="20000"
+                placeholder="Paste the passage the author claims to quote."
+              ></textarea>
+            </div>
+            <div class="input-pane">
+              <div class="pane-heading">
+                <span class="micro">02 / SOURCE</span
+                ><span class="muted small">The original document.</span>
+              </div>
+              <label class="file-drop" id="file-drop" for="source-file"
+                ><span class="upload-glyph">↥</span
+                ><strong>Drop a source. Follow its trace.</strong
+                ><span id="file-name">TXT, MD, PDF or DOCX · up to 25 MB</span
+                ><input
+                  id="source-file"
+                  type="file"
+                  accept=".txt,.md,.pdf,.docx"
+                  required
+              /></label>
+              <label for="access-tier">Available source</label
+              ><select id="access-tier">
                 <option value="full_text">Full text</option>
                 <option value="abstract">Abstract only</option>
                 <option value="excerpt">Excerpt only</option>
                 <option value="unknown">Unknown completeness</option>
               </select>
-            </label>
-          </div>
-
-          <label>
-            <span>Claimed quote <small>optional, checked exactly</small></span>
-            <textarea id="quote" rows="2" maxlength="20000" placeholder="Paste the quote the citation is said to rely on."></textarea>
-          </label>
-
-          <label class="file-drop" id="file-drop">
-            <input id="source-file" type="file" accept=".txt,.md,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
-            <span class="file-title">Choose the cited source</span>
-            <span id="file-name">TXT, Markdown, PDF, or DOCX · maximum 25 MB</span>
-          </label>
-
-          <label class="check-row">
-            <input id="use-provider" type="checkbox" checked />
-            <span>Use the configured structured judgment provider</span>
-          </label>
-
-          <div class="form-actions">
-            <button type="submit" class="primary" id="submit-button">Run audit</button>
-            <p id="form-status" role="status" aria-live="polite"></p>
-          </div>
-        </form>
-
-        <aside class="panel guidance">
-          <div class="panel-heading">
-            <div><span class="step">02</span><h2>Review standard</h2></div>
-          </div>
-          <ol>
-            <li><strong>Confirm identity.</strong> Is this the source the author intended?</li>
-            <li><strong>Inspect context.</strong> Read before and after the selected passage.</li>
-            <li><strong>Check boundaries.</strong> Population, endpoint, time, and causal strength matter.</li>
-            <li><strong>Own the result.</strong> Record a decision and explain it.</li>
-          </ol>
-          <p class="caution">A green proposal is not a final verdict. It remains unreviewed until a person signs it.</p>
-        </aside>
+              <label class="check-row"
+                ><input id="use-provider" type="checkbox" checked /><span
+                  >Enable structured judgment
+                  <small id="provider-label">Configured provider</small></span
+                ></label
+              >
+              <p class="small muted">
+                Parsing and retrieval happen on this service. When enabled, the
+                claim and selected passage are sent to the configured provider.
+              </p>
+            </div>
+            <div class="form-bottom">
+              <p id="form-status" role="status" aria-live="polite">
+                Ready when you are.
+              </p>
+              <button id="submit-button" class="button primary" type="submit">
+                Run audit <span>↗</span>
+              </button>
+            </div>
+          </form>
+          <noscript
+            ><p class="error">
+              JavaScript is required to run and review audits.
+            </p></noscript
+          >
+          <section
+            id="result"
+            class="result"
+            hidden
+            aria-label="Current audit"
+          ></section>
+          <section class="history-section">
+            <div class="ledger-heading">
+              <div>
+                <span class="micro">YOUR RESEARCH LOG</span>
+                <h3>Audit ledger</h3>
+              </div>
+              <button
+                type="button"
+                id="refresh-history"
+                class="button secondary"
+              >
+                Refresh ↻
+              </button>
+            </div>
+            <p class="small muted">
+              Records available on this service. Local installations retain
+              their SQLite history; ephemeral hosting may not.
+            </p>
+            <div id="history" aria-live="polite">
+              <p class="empty">Loading records…</p>
+            </div>
+          </section>
+        </div>
       </section>
 
-      <section id="result" class="result" hidden aria-live="polite"></section>
-
-      <section class="history-section">
-        <div class="section-heading">
-          <div><span class="step">03</span><h2>Local audit history</h2></div>
-          <button id="refresh-history" class="secondary" type="button">Refresh</button>
+      <section class="benchmark-section shell" id="benchmark">
+        <div>
+          <span class="micro">05 / BENCHMARK PREPARATION</span>
+          <h2>
+            Evidence before<br /><span class="dim">performance claims.</span>
+          </h2>
         </div>
-        <div id="history" class="history"><p class="muted">No local audits loaded.</p></div>
+        <div>
+          <p>
+            The literature seed is an engineering smoke test. It does not
+            establish accuracy or clinical validity.
+          </p>
+          <p class="muted">
+            Formal evaluation requires independent annotation, adjudication and
+            a frozen held-out set.
+          </p>
+          <a
+            class="text-link"
+            href="https://github.com/Beverly621/claim-trellis/tree/main/benchmarks"
+            >Read the evaluation protocol ↗</a
+          >
+        </div>
       </section>
     </main>
-
-    <footer>
-      <p>ClaimTrellis local alpha · semantic proposals require human confirmation.</p>
-      <nav><a href="/docs">API docs</a><a href="/redoc">API reference</a></nav>
+    <footer class="shell">
+      <div class="footer-top">
+        <a class="brand" href="#"
+          ><img
+            src="/assets/mark.svg"
+            width="24"
+            height="24"
+            alt=""
+          />ClaimTrellis</a
+        >
+        <p>Human judgment remains the final authority.</p>
+        <a href="#workspace" class="text-link">Start with one claim ↗</a>
+      </div>
+      <div class="footer-bottom">
+        <span>INDEPENDENT OPEN SOURCE / APACHE-2.0</span>
+        <nav aria-label="Footer navigation">
+          <a href="/docs">Documentation</a><a href="#method">Method</a
+          ><a
+            href="https://github.com/Beverly621/claim-trellis/blob/main/SECURITY.md"
+            >Security</a
+          ><a
+            href="https://github.com/Beverly621/claim-trellis/blob/main/LICENSE"
+            >License</a
+          >
+        </nav>
+        <span>LOCAL-FIRST · EXPERIMENTAL v0.1</span>
+      </div>
     </footer>
+    <script src="/assets/design.js" defer></script>
     <script src="/assets/app.js" defer></script>
   </body>
 </html>

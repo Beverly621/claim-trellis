@@ -15,6 +15,12 @@ an audit, the service transmits:
 - the minimum citation/source metadata needed for interpretation;
 - the versioned question definitions.
 
+When a reviewer explicitly requests a revision, the request additionally includes their
+feedback, the previous structured proposal and policy reasons, deterministic checks,
+source completeness, and parent/version references. Feedback is untrusted review context,
+not replacement source evidence. Reviewer aliases are recorded locally, not included in
+the provider's revision context.
+
 It does not transmit the entire manuscript by design. Users must review TypeSafe's current
 terms and institutional rules. Zero-data-retention requirements need an appropriate
 provider agreement; the open-source software cannot create that agreement.

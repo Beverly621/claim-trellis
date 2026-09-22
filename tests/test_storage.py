@@ -45,5 +45,9 @@ def test_store_appends_create_and_review_events(tmp_path) -> None:
     assert updated.human_review is not None
     assert [event.event_type for event in store.events("audit-1")] == [
         "audit.created",
-        "review.recorded",
+        "source.loaded",
+        "checks.completed",
+        "proposal.created",
+        "feedback.recorded",
+        "review.accepted",
     ]
