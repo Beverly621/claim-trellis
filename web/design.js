@@ -18,6 +18,11 @@
     applyMotion();
   });
   applyMotion();
+  document.querySelectorAll(".mobile-nav a").forEach((link) => {
+    link.addEventListener("click", () =>
+      link.closest("details").removeAttribute("open"),
+    );
+  });
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {

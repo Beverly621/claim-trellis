@@ -23,11 +23,19 @@
           alt=""
         />ClaimTrellis<span class="alpha">v0.1</span></a
       >
-      <nav aria-label="Main navigation">
+      <nav class="desktop-nav" aria-label="Main navigation">
         <a href="#product">Product</a><a href="#method">Method</a
         ><a href="#benchmark">Benchmark</a><a href="/docs">Docs ↗</a
         ><a href="https://github.com/Beverly621/claim-trellis">GitHub ↗</a>
       </nav>
+      <details class="mobile-nav">
+        <summary aria-label="Open navigation">Menu</summary>
+        <nav aria-label="Mobile navigation">
+          <a href="#product">Product</a><a href="#method">Method</a
+          ><a href="#benchmark">Benchmark</a><a href="/docs">Docs ↗</a
+          ><a href="https://github.com/Beverly621/claim-trellis">GitHub ↗</a>
+        </nav>
+      </details>
       <a class="nav-cta" href="#workspace">Open console <span>↗</span></a>
     </header>
     <main>
@@ -47,19 +55,12 @@
               Auditable claim-to-source verification<br />with human final
               judgment.
             </p>
-            <p class="muted">
-              Trace claims to evidence. Inspect what sources actually support.
-              Preserve every decision.
-            </p>
             <div class="actions">
               <a class="button primary magnetic" href="#workspace"
                 >Run an audit <span>↗</span></a
               ><a class="text-link" href="#method"
                 >Explore the method <span>↓</span></a
               >
-            </div>
-            <div class="hero-footnote">
-              <span>[ 01 — 06 ]</span> Six relations. One accountable process.
             </div>
           </div>
           <div
@@ -134,8 +135,7 @@
           </div>
         </div>
         <div class="hero-bottom">
-          <span>LOCAL EVIDENCE. STRUCTURED JUDGMENT. HUMAN CONTROL.</span
-          ><button type="button" id="motion-toggle" aria-pressed="false">
+          <button type="button" id="motion-toggle" aria-pressed="false">
             Pause motion <span>Ⅱ</span></button
           ><a href="#method" aria-label="Scroll to method">SCROLL TO TRACE ↓</a>
         </div>
@@ -385,10 +385,13 @@
           </div>
           <div class="workspace-heading">
             <h2>Evidence Console<span class="accent">.</span></h2>
-            <p class="muted">
-              One atomic English claim. Its cited source.<br />A decision you
-              can stand behind.
-            </p>
+            <button
+              class="guide-trigger"
+              type="button"
+              data-help="review-guide"
+            >
+              Review guide <span aria-hidden="true">?</span>
+            </button>
           </div>
           <form id="audit-form" class="audit-form">
             <div class="input-pane">
@@ -553,6 +556,19 @@
         <span>LOCAL-FIRST · EXPERIMENTAL v0.1</span>
       </div>
     </footer>
+    <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
+      <div class="help-paper">
+        <button class="help-close" type="button" aria-label="Close guide">
+          ×
+        </button>
+        <p class="help-kicker">CLAIMTRELLIS / RESEARCH HANDBOOK</p>
+        <h2 id="help-title"></h2>
+        <div id="help-body" class="help-body"></div>
+        <a id="help-link" class="help-doc-link" href="/docs"
+          >Read the documentation ↗</a
+        >
+      </div>
+    </dialog>
     <script src="/assets/design.js" defer></script>
     <script src="/assets/app.js" defer></script>
   </body>
