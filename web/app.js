@@ -38,6 +38,44 @@ const reference = (audit) => ({
 });
 const activeRevision = (audit) =>
   ["revision_requested", "revision_running"].includes(audit.review_status);
+const helpContent = {
+  "review-guide": {
+    title: "Review standard",
+    body: `<ol class="guide-steps"><li><strong>Confirm identity.</strong><span>Is this the source the author intended?</span></li><li><strong>Inspect context.</strong><span>Read before and after the selected passage.</span></li><li><strong>Check boundaries.</strong><span>Population, endpoint, time, and causal strength matter.</span></li><li><strong>Own the result.</strong><span>Record a decision and explain it.</span></li></ol>`,
+  },
+  evidence: {
+    title: "Selected evidence",
+    body: `<p>The console retrieves a candidate passage from the supplied source. Read its surrounding context before accepting a proposal.</p><p>The locator, character offsets and hashes preserve the trace back to the source.</p>`,
+  },
+  relations: {
+    title: "Relation probabilities",
+    body: `<p>The provider assigns probability across six claim–source relations. The highlighted relation is the current proposal, not a guarantee of correctness.</p><p><strong>Partially supports</strong> means the source supports a material part of the claim, but not its full scope, population, endpoint, strength or causal interpretation.</p>`,
+  },
+  checks: {
+    title: "Deterministic checks",
+    body: `<p>Quote matching, number comparison and hashes are computed in code. Scope, population and causal fidelity are semantic provider judgments.</p><p>A warning identifies a boundary that needs attention; it does not silently decide the final outcome.</p>`,
+  },
+  timeline: {
+    title: "Audit lifecycle",
+    body: `<p>Summary mode foregrounds provider proposals, human feedback and final actions. Full audit mode preserves every append-only technical event.</p><p>Older proposals remain readable and cannot be silently overwritten.</p>`,
+  },
+  actions: {
+    title: "Human actions",
+    body: `<dl class="action-guide"><dt>Accept</dt><dd>Confirm the current proposal.</dd><dt>Revise with feedback</dt><dd>Return guidance to the provider and create a new proposal version.</dd><dt>Reject</dt><dd>Refuse the proposal without silently rerunning the provider.</dd><dt>Defer</dt><dd>Keep the audit pending for later review.</dd></dl><p>The current API records a note for every action. Revision feedback is review context, never replacement evidence.</p>`,
+  },
+};
+let helpReturnFocus = null;
+
+function openHelp(key, trigger) {
+  const content = helpContent[key];
+  const dialog = $("#help-dialog");
+  if (!content || !dialog) return;
+  helpReturnFocus = trigger;
+  $("#help-title").textContent = content.title;
+  $("#help-body").innerHTML = content.body;
+  dialog.showModal();
+  $(".help-close").focus();
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, options);
@@ -82,10 +120,11 @@ async function loadHealth() {
   }
 }
 function probabilityBars(judgment) {
+  const top = judgment?.relation.choice;
   return relations
     .map((key) => {
       const value = judgment?.relation.probabilities[key];
-      return `<div class="prob-row"><span>${key}</span><div class="prob-track"><div class="prob-fill" style="--prob:${Number.isFinite(value) ? Math.max(0, Math.min(100, value * 100)) : 0}%"></div></div><span>${percent(value)}</span></div>`;
+      return `<div class="prob-row ${key === top ? "is-top" : ""}"><span>${key}</span><div class="prob-track"><div class="prob-fill" style="--prob:${Number.isFinite(value) ? Math.max(0, Math.min(100, value * 100)) : 0}%"></div></div><span>${percent(value)}</span></div>`;
     })
     .join("");
 }
@@ -161,56 +200,58 @@ function renderAudit(audit, versions, revisions, events, draft = null) {
   ];
   $("#result").hidden = false;
   $("#result").innerHTML = `
-    <div class="result-banner"><div><span class="micro">${final ? "HUMAN-CONFIRMED PROPOSAL" : "MODEL PROPOSAL"} / V${audit.current_proposal_version}</span><h3>${esc(judgment?.relation.choice || "No semantic judgment")}</h3><span class="locator">Policy disposition: ${esc(label(audit.proposal.status))}</span></div><div><span class="micro">RELATION PROBABILITY</span><div class="score">${judgment ? percent(judgment.relation.probabilities[judgment.relation.choice]) : "—"}</div></div><span class="status-badge status-${esc(audit.review_status)}">${esc(label(audit.review_status))}</span></div>
+    <div class="result-banner"><div><span class="micro">${final ? "HUMAN-CONFIRMED PROPOSAL" : "MODEL PROPOSAL"} / V${audit.current_proposal_version}</span><h3>${esc(judgment?.relation.choice || "No semantic judgment")}</h3></div><div class="proposal-score"><span>Probability</span><strong>${judgment ? percent(judgment.relation.probabilities[judgment.relation.choice]) : "—"}</strong></div><span class="status-badge status-${esc(audit.review_status)}">${esc(label(audit.review_status))}</span></div>
     <div class="result-grid"><div class="evidence-column">
-      <section class="detail-panel"><h4>Claim → source</h4><blockquote class="claim-card">${esc(audit.claim)}</blockquote><p class="locator">${esc(audit.source.title || audit.citation || "Uploaded source")} · ${esc(label(audit.source.access_tier))}</p><h4>Selected evidence</h4>${passage ? `<p class="evidence-text">${esc(passage.text)}</p><p class="locator">${esc(passage.locator)} · characters ${passage.start_char}–${passage.end_char}</p>` : '<p class="muted">No passage retrieved.</p>'}</section>
-      <section class="detail-panel"><h4>Deterministic checks & semantic boundaries</h4><ul class="check-list">${checkRows.map(([a, b]) => `<li><span>${esc(a)}</span><span>${esc(b)}</span></li>`).join("")}</ul><p class="locator">Scope, population and causal fidelity are provider judgments. Quote and number checks run in code.</p></section>
-      <section class="detail-panel"><h4>Six relation probabilities</h4>${probabilityBars(judgment)}<p class="locator">${judgment ? "Distribution over source relations, not a calibrated guarantee of correctness." : "No probabilities returned. No values are inferred."}</p></section>
-      ${previous ? `<section class="detail-panel"><h4>What changed</h4><div class="revision-compare"><div><small>PROPOSAL V${previous.version}</small><p>${esc(previous.relation || "No judgment")}</p><small>${percent(previous.probabilities[previous.relation])}</small></div><span>→</span><div><small>PROPOSAL V${current.version}</small><p class="accent">${esc(current.relation || "No judgment")}</p><small>${percent(current.probabilities[current.relation])}</small></div></div><p class="micro muted">HUMAN GUIDANCE</p><blockquote class="guidance">${esc(revisions.find((r) => r.result_proposal_id === current.proposal_id)?.request.feedback || "")}</blockquote></section>` : ""}
-      <section class="detail-panel"><h4>Provenance</h4>${metadata([
-        ["Audit ID", audit.audit_id],
-        ["Proposal ID", audit.current_proposal_id],
-        ["Source hash", audit.source.content_sha256],
-        ["Evidence hash", passage?.sha256],
-        ["Claim hash", checks.normalized_claim_sha256],
-        ["Provider", judgment?.provider],
-        ["Model", judgment?.resolved_model],
+      <section class="detail-panel evidence-panel"><div class="panel-heading"><h4>Claim & evidence</h4><button class="info-button" type="button" data-help="evidence" aria-label="About evidence selection">?</button></div><span class="field-label">CLAIM</span><blockquote class="claim-card">${esc(audit.claim)}</blockquote><div class="source-line"><span class="field-label">SOURCE</span><span>${esc(audit.source.title || audit.citation || "Uploaded source")} · ${esc(label(audit.source.access_tier))}</span></div><span class="field-label">SELECTED EVIDENCE</span>${passage ? `<p class="evidence-text">${esc(passage.text)}</p><p class="locator">${esc(passage.locator)} · characters ${passage.start_char}–${passage.end_char}</p>` : '<p class="muted">No passage retrieved.</p>'}</section>
+      ${previous ? `<section class="detail-panel comparison-panel"><span class="field-label">WHAT CHANGED?</span><div class="revision-compare"><div><small>PROPOSAL V${previous.version}</small><p>${esc(previous.relation || "No judgment")}</p><small>${percent(previous.probabilities[previous.relation])}</small></div><span>→</span><div><small>PROPOSAL V${current.version}</small><p class="accent">${esc(current.relation || "No judgment")}</p><small>${percent(current.probabilities[current.relation])}</small></div></div><span class="field-label">HUMAN FEEDBACK</span><blockquote class="guidance">${esc(revisions.find((r) => r.result_proposal_id === current.proposal_id)?.request.feedback || "")}</blockquote><p class="change-line">Changed: <strong>${esc(previous.relation || "none")}</strong> → <strong>${esc(current.relation || "none")}</strong></p></section>` : ""}
+      <section class="detail-panel probability-panel"><div class="panel-heading"><h4>Relation probabilities</h4><button class="info-button" type="button" data-help="relations" aria-label="About relation probabilities">?</button></div>${probabilityBars(judgment)}</section>
+      <details class="detail-panel disclosure"><summary><span>Deterministic checks</span><span>${warnings.length ? `${warnings.length} attention` : "View checks"}</span></summary><div class="disclosure-body"><ul class="check-list">${checkRows.map(([a, b]) => `<li><span>${esc(a)}</span><span>${esc(b)}</span></li>`).join("")}</ul><button class="inline-help" type="button" data-help="checks">How these checks work ↗</button></div></details>
+      <section class="detail-panel timeline-panel"><div class="panel-heading"><h4>Lifecycle</h4><button class="info-button" type="button" data-help="timeline" aria-label="About the audit timeline">?</button></div><div id="audit-timeline"></div><details class="technical-events"><summary>Show full audit events</summary><div id="full-audit-timeline"></div></details></section>
+      <details class="detail-panel disclosure"><summary><span>Audit provenance</span><span>IDs, provider & policy</span></summary><div class="disclosure-body">${metadata(
         [
-          "Question set",
-          judgment?.question_set_version ??
-            audit.provenance.question_set_version,
+          ["Audit ID", audit.audit_id],
+          ["Proposal ID", audit.current_proposal_id],
+          ["Source hash", audit.source.content_sha256],
+          ["Evidence hash", passage?.sha256],
+          ["Claim hash", checks.normalized_claim_sha256],
+          ["Provider", judgment?.provider],
+          ["Model", judgment?.resolved_model],
+          [
+            "Question set",
+            judgment?.question_set_version ??
+              audit.provenance.question_set_version,
+          ],
+          ["Policy", audit.proposal.policy_version],
+          ["Retrieval", audit.provenance.retrieval_version],
+          ["Created", time(audit.provenance.created_at)],
+          [
+            "Provider latency",
+            judgment ? Math.round(judgment.latency_ms) + " ms" : null,
+          ],
+          [
+            "Tokens in / out",
+            judgment
+              ? judgment.input_tokens + " / " + judgment.output_tokens
+              : null,
+          ],
         ],
-        ["Policy", audit.proposal.policy_version],
-        ["Retrieval", audit.provenance.retrieval_version],
-        ["Created", time(audit.provenance.created_at)],
-        [
-          "Provider latency",
-          judgment ? Math.round(judgment.latency_ms) + " ms" : null,
-        ],
-        [
-          "Tokens in / out",
-          judgment
-            ? judgment.input_tokens + " / " + judgment.output_tokens
-            : null,
-        ],
-      ])}</section>
-      <section class="detail-panel"><h4>Audit timeline</h4><div id="audit-timeline"></div></section>
-      <details class="detail-panel"><summary>All proposal versions · read only (${versions.length})</summary>${versions.map((version) => `<div class="instrument-row"><span>v${version.version} · ${esc(version.relation || "No judgment")}</span><span>${esc(label(version.review_status))}</span></div><p class="locator">${esc(version.proposal_id)} · ${esc(time(version.created_at))}</p>`).join("")}</details>
-    </div><section class="detail-panel review-panel"><h4>Human review / V${audit.current_proposal_version}</h4>
-      <p class="review-intro">The provider proposes. Your action controls what happens next.</p>
-      <h4>Policy reasons</h4><ul class="reason-list">${audit.proposal.reasons.map((reason) => `<li>${esc(reason)}</li>`).join("")}</ul>
-      ${judgment?.judgment_summary ? `<h4>Judgment summary</h4><p>${esc(judgment.judgment_summary)}</p>` : '<p class="locator">This provider supplies structured judgments without a narrative summary. Policy reasons above are generated by application rules.</p>'}
+      )}</div></details>
+      <details class="detail-panel disclosure"><summary><span>Proposal history</span><span>${versions.length} version${versions.length === 1 ? "" : "s"}</span></summary><div class="disclosure-body">${versions.map((version) => `<div class="instrument-row"><span>v${version.version} · ${esc(version.relation || "No judgment")}</span><span>${esc(label(version.review_status))}</span></div><p class="locator">${esc(version.proposal_id)} · ${esc(time(version.created_at))}</p>`).join("")}</div></details>
+    </div><section class="detail-panel review-panel"><div class="panel-heading"><div><span class="field-label">HUMAN DECISION</span><h4>Human review / V${audit.current_proposal_version}</h4></div><button class="guide-trigger compact" type="button" data-help="review-guide">Review guide <span aria-hidden="true">?</span></button></div>
+      ${judgment?.judgment_summary ? `<p class="judgment-summary">${esc(judgment.judgment_summary)}</p>` : ""}
       ${warnings.length ? `<div class="error small"><strong>Attention required</strong><ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></div>` : ""}
       ${audit.human_review ? `<p class="locator">Last action: ${esc(audit.human_review.decision)} · ${esc(audit.human_review.reviewer)} · ${esc(time(audit.human_review.created_at))}</p><blockquote class="guidance">${esc(audit.human_review.notes)}</blockquote>` : ""}
+      <details class="review-rationale"><summary>Policy rationale</summary><ul class="reason-list">${audit.proposal.reasons.map((reason) => `<li>${esc(reason)}</li>`).join("")}</ul></details>
       <form id="review-form"><label for="reviewer">Reviewer alias</label><input id="reviewer" required maxlength="200" value="${esc(reviewer)}">
-        <label for="review-notes">Human feedback <span>required for every action</span></label><textarea id="review-notes" required maxlength="10000" rows="5" placeholder="Identify a scope mismatch, explain your decision, or ask the provider to re-check a boundary.">${esc(feedback)}</textarea>
-        <p class="locator">Feedback is checked against the original evidence. It never replaces the source.</p>
-        <div class="review-actions"><button class="button primary" type="submit" data-action="accept" ${final || processing || !judgment || audit.service_errors.length || audit.review_status === "rejected" ? "disabled" : ""}>Accept proposal ✓</button><button class="button secondary" type="submit" data-action="revise" ${final || processing ? "disabled" : ""}>${audit.review_status === "revision_failed" ? "Retry revision" : "Revise with feedback"} ↻</button><button class="button secondary" type="submit" data-action="reject" ${final || processing || audit.review_status === "rejected" ? "disabled" : ""}>Reject</button><button class="button secondary" type="submit" data-action="defer" ${final || processing || audit.review_status === "rejected" ? "disabled" : ""}>Defer</button></div>
+        <div class="feedback-label"><label for="review-notes">Human feedback</label><button class="info-button" type="button" data-help="actions" aria-label="About review action requirements">?</button></div><textarea id="review-notes" required maxlength="10000" rows="5" placeholder="Add a concise decision note, or guidance for a revision.">${esc(feedback)}</textarea>
+        <p class="feedback-contract">Revise and Reject need substantive feedback. The current API also records a short note for Accept and Defer.</p>
+        <div class="review-actions"><button class="button accept-action" type="submit" data-action="accept" ${final || processing || !judgment || audit.service_errors.length || audit.review_status === "rejected" ? "disabled" : ""}>Accept proposal <span>✓</span></button><button class="button revise-action" type="submit" data-action="revise" ${final || processing ? "disabled" : ""}>${audit.review_status === "revision_failed" ? "Retry revision" : "Revise with feedback"} <span>↻</span></button><button class="quiet-action reject-action" type="submit" data-action="reject" ${final || processing || audit.review_status === "rejected" ? "disabled" : ""}>Reject</button><button class="quiet-action defer-action" type="submit" data-action="defer" ${final || processing || audit.review_status === "rejected" ? "disabled" : ""}>Defer</button></div>
       </form>
       <p id="review-status" role="status" aria-live="polite">${processing ? "Re-evaluating evidence. Awaiting the provider response…" : final ? "This proposal version is accepted. The complete history is preserved." : audit.review_status === "rejected" ? "Proposal rejected. Use feedback to request a new judgment." : audit.review_status === "revision_failed" ? "Revision failed. Original proposal and feedback preserved." : "Awaiting your review."}</p>
       <button id="reload-audit" type="button" class="text-link" style="background:none;border:0;border-bottom:1px solid #485450;margin-top:18px;padding-inline:0">Refresh current record ↻</button>
     </section></div>`;
-  renderTimeline(events);
+  renderTimeline(events, false);
+  renderTimeline(events, true);
   $("#reviewer").disabled = state.busy;
   $("#review-notes").disabled = state.busy;
   $("#review-form").addEventListener("submit", handleReview);
@@ -234,18 +275,32 @@ const eventNames = {
   "review.deferred": "Decision deferred",
   "review.recorded": "Legacy review recorded",
 };
-function renderTimeline(events) {
-  const container = $("#audit-timeline");
+function renderTimeline(events, full) {
+  const container = $(full ? "#full-audit-timeline" : "#audit-timeline");
   if (!container) return;
+  const lifecycleTypes = new Set([
+    "proposal.created",
+    "feedback.recorded",
+    "revision.failed",
+    "review.accepted",
+    "review.rejected",
+    "review.deferred",
+  ]);
+  const visibleEvents = full
+    ? events
+    : events.filter((event) => lifecycleTypes.has(event.event_type));
   container.innerHTML =
-    '<ol class="timeline">' +
-    events
+    `<ol class="timeline ${full ? "timeline-full" : "timeline-summary"}">` +
+    visibleEvents
       .map((event) => {
         const data = event.payload;
         const description =
-          event.event_type === "proposal.created" && !data.proposal?.judgment
-            ? "Deterministic proposal recorded"
-            : eventNames[event.event_type] || event.event_type;
+          !full && event.event_type === "proposal.created"
+            ? "Proposal"
+            : event.event_type === "proposal.created" &&
+                !data.proposal?.judgment
+              ? "Deterministic proposal recorded"
+              : eventNames[event.event_type] || event.event_type;
         return `<li><div class="timeline-title"><span>${esc(description)}${event.proposal_version ? " · v" + event.proposal_version : ""}</span><time datetime="${esc(event.created_at)}">${esc(time(event.created_at))}</time></div>${data.feedback ? `<blockquote class="guidance">${esc(data.feedback)}</blockquote>` : ""}${data.message ? `<p class="error small">${esc(data.message)}</p>` : ""}${data.review ? `<p class="locator">${esc(data.review.reviewer)} · ${esc(data.review.notes)}</p>` : ""}${data.proposal?.relation ? `<p class="locator">${esc(data.proposal.relation)} · ${percent(data.proposal.probabilities[data.proposal.relation])}</p>` : ""}</li>`;
       })
       .join("") +
@@ -520,5 +575,14 @@ $("#audit-form").addEventListener("submit", async (event) => {
   }
 });
 $("#refresh-history").addEventListener("click", loadHistory);
+document.addEventListener("click", (event) => {
+  const trigger = event.target.closest("[data-help]");
+  if (trigger) openHelp(trigger.dataset.help, trigger);
+});
+$(".help-close").addEventListener("click", () => $("#help-dialog").close());
+$("#help-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) event.currentTarget.close();
+});
+$("#help-dialog").addEventListener("close", () => helpReturnFocus?.focus());
 loadHealth();
 loadHistory();
