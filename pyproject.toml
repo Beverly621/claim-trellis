@@ -50,7 +50,7 @@ dev = [
 claim-trellis = "claim_trellis.cli:app"
 
 [tool.vercel]
-entrypoint = "src.claim_trellis.api:app"
+entrypoint = "src.vercel_app:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/claim_trellis"]
