@@ -396,6 +396,14 @@ class AuditStore:
     def start_revision(self, run: RevisionRun) -> None:
         with self._connect() as c:
             c.execute("BEGIN IMMEDIATE")
+            row = c.execute(
+                "SELECT record_json FROM revision_runs WHERE revision_id=?", (run.revision_id,)
+            ).fetchone()
+            if (
+                row is None
+                or RevisionRun.model_validate_json(row[0]).status != RevisionStatus.REQUESTED
+            ):
+                raise LifecycleConflict("Revision is no longer current.")
             audit = self._get(c, run.audit_id)
             if (
                 audit.review_status != ReviewStatus.REQUESTED

@@ -84,8 +84,16 @@ def test_review_actions(environment, decision, status):
     response = client.post(f"/api/v1/audits/{audit['audit_id']}/reviews", json=body)
     assert response.status_code == 200
     assert response.json()["review_status"] == status
+    assert response.json()["human_review"]["proposal_id"] == audit["current_proposal_id"]
+    assert (
+        client.get(f"/api/v1/audits/{audit['audit_id']}/proposals/current").json()["review_status"]
+        == status
+    )
     assert len(provider.calls) == 1  # Reject and Defer do not call a provider.
-    assert store.events(audit["audit_id"])[-1].event_type == f"review.{status}"
+    assert [event.event_type for event in store.events(audit["audit_id"])[-2:]] == [
+        "feedback.recorded",
+        f"review.{status}",
+    ]
     assert client.post(f"/api/v1/audits/{audit['audit_id']}/reviews", json=body).status_code == 409
 
 
@@ -172,6 +180,11 @@ def test_failure_preserved_and_retry(environment, error, code):
     assert failure["status"] == "revision_failed"
     assert failure["error_code"] == code
     assert failure["request"]["feedback"] == request["feedback"]
+    event_count = len(store.events(audit["audit_id"]))
+    provider_call_count = len(provider.calls)
+    assert client.post(base + "/revisions", json=request).json() == failure
+    assert len(store.events(audit["audit_id"])) == event_count
+    assert len(provider.calls) == provider_call_count
     failed_audit = client.get(base).json()
     assert failed_audit["judgment_result"] == audit["judgment_result"]
     assert failed_audit["human_review"] is None
@@ -195,6 +208,15 @@ def test_failure_preserved_and_retry(environment, error, code):
     assert retried["status"] == "revision_completed"
     assert client.get(base).json()["current_proposal_version"] == 2
     assert len(store.revisions(audit["audit_id"])) == 2
+    assert [event.event_type for event in store.events(audit["audit_id"])[-7:]] == [
+        "revision.failed",
+        "feedback.recorded",
+        "revision.requested",
+        "revision.started",
+        "proposal.superseded",
+        "proposal.created",
+        "revision.completed",
+    ]
 
 
 def test_reject_then_revision_retains_rejection(environment):
@@ -209,6 +231,18 @@ def test_reject_then_revision_retains_rejection(environment):
             "reviewer": "r",
         },
     ).json()
+    assert (
+        client.post(
+            base + "/reviews",
+            json={
+                **reference(rejected),
+                "decision": "accept",
+                "notes": "Too late.",
+                "reviewer": "r",
+            },
+        ).status_code
+        == 409
+    )
     provider.error = TimeoutError()
     client.post(base + "/revisions", json=revision_request(rejected))
     failed = client.get(base).json()
@@ -284,6 +318,140 @@ def test_interrupted_revision_recovered_and_late_response_ignored(environment):
     late = store.finish_revision(run, original.judgment, original.policy)
     assert late.status == RevisionStatus.FAILED
     assert len(store.proposals(audit["audit_id"])) == 1
+
+
+def test_v1_to_v3_preserves_snapshots_and_review_history(environment):
+    client, store, _, provider, v1 = environment
+    base = f"/api/v1/audits/{v1['audit_id']}"
+    with store._connect() as connection:
+        original_snapshot = connection.execute(
+            "SELECT snapshot_json FROM proposal_versions WHERE proposal_id=?",
+            (v1["current_proposal_id"],),
+        ).fetchone()[0]
+
+    first = client.post(base + "/revisions", json=revision_request(v1, "revision-v2"))
+    assert first.status_code == 200
+    v2 = client.get(base).json()
+    assert v2["current_proposal_version"] == 2
+    deferred = client.post(
+        base + "/reviews",
+        json={
+            **reference(v2),
+            "decision": "defer",
+            "notes": "Return after checking scope.",
+            "reviewer": "r",
+        },
+    )
+    assert deferred.status_code == 200
+    assert deferred.json()["review_status"] == "deferred"
+    assert deferred.json()["current_proposal_id"] == v2["current_proposal_id"]
+
+    second_request = revision_request(deferred.json(), "revision-v3")
+    second_request["feedback"] = "Recheck the population and endpoint."
+    second = client.post(base + "/revisions", json=second_request)
+    assert second.status_code == 200
+    v3 = client.get(base).json()
+    assert v3["current_proposal_version"] == 3
+    assert v3["review_status"] == "pending_review"
+    assert v3["human_review"] is None
+    assert provider.calls[-1][3].human_feedback == second_request["feedback"]
+    assert provider.calls[-1][3].revision_number == 3
+    assert provider.calls[-1][3].previous_proposal.proposal_id == v2["current_proposal_id"]
+    assert provider.calls[-1][1] == v1["selected_passage"]["text"]
+
+    history = client.get(base + "/proposals").json()
+    assert [item["version"] for item in history] == [1, 2, 3]
+    assert [item["review_status"] for item in history] == [
+        "superseded",
+        "superseded",
+        "pending_review",
+    ]
+    assert [item["parent_proposal_id"] for item in history] == [
+        None,
+        history[0]["proposal_id"],
+        history[1]["proposal_id"],
+    ]
+    with store._connect() as connection:
+        assert (
+            connection.execute(
+                "SELECT snapshot_json FROM proposal_versions WHERE proposal_id=?",
+                (v1["current_proposal_id"],),
+            ).fetchone()[0]
+            == original_snapshot
+        )
+    assert (
+        client.post(
+            base + "/reviews",
+            json={**reference(v2), "decision": "accept", "notes": "Old tab.", "reviewer": "r"},
+        ).status_code
+        == 409
+    )
+    accepted = client.post(
+        base + "/reviews",
+        json={**reference(v3), "decision": "accept", "notes": "Checked v3.", "reviewer": "r"},
+    )
+    assert accepted.status_code == 200
+    assert accepted.json()["human_review"]["proposal_version"] == 3
+    assert accepted.json()["review_status"] == "accepted"
+    assert [run["result_proposal_id"] for run in client.get(base + "/revisions").json()] == [
+        history[1]["proposal_id"],
+        history[2]["proposal_id"],
+    ]
+    events = client.get(base + "/events").json()
+    assert [event["event_type"] for event in events][-7:] == [
+        "revision.requested",
+        "revision.started",
+        "proposal.superseded",
+        "proposal.created",
+        "revision.completed",
+        "feedback.recorded",
+        "review.accepted",
+    ]
+    assert [
+        (event["proposal_version"], event["event_type"])
+        for event in events
+        if event["event_type"] == "proposal.created"
+    ] == [(1, "proposal.created"), (2, "proposal.created"), (3, "proposal.created")]
+
+
+def test_completed_revision_replay_is_idempotent(environment):
+    client, store, _, provider, audit = environment
+    base = f"/api/v1/audits/{audit['audit_id']}"
+    request = revision_request(audit, "replay-v2")
+    completed = client.post(base + "/revisions", json=request)
+    assert completed.status_code == 200
+    event_count = len(store.events(audit["audit_id"]))
+    assert client.post(base + "/revisions", json=request).json() == completed.json()
+    assert len(store.events(audit["audit_id"])) == event_count
+    assert len(provider.calls) == 2
+    assert len(store.proposals(audit["audit_id"])) == 2
+    changed = {**request, "feedback": "Different instruction"}
+    assert client.post(base + "/revisions", json=changed).status_code == 409
+    assert (
+        client.post(
+            base + "/revisions", json={**request, "idempotency_key": "new-key-old-state"}
+        ).status_code
+        == 409
+    )
+
+
+def test_expired_revision_cannot_restart_after_retry(environment):
+    _, store, _, _, audit = environment
+    old_run, _ = store.request_revision(
+        audit["audit_id"], RevisionRequest(**revision_request(audit, "expired-v2"))
+    )
+    store.REVISION_LEASE_SECONDS = -1
+    failed = store.get(audit["audit_id"])
+    assert failed.review_status == RevisionStatus.FAILED
+    new_run, _ = store.request_revision(
+        audit["audit_id"],
+        RevisionRequest(**revision_request(failed.model_dump(mode="json"), "retry-v2")),
+    )
+    store.REVISION_LEASE_SECONDS = 180
+    with pytest.raises(LifecycleConflict):
+        store.start_revision(old_run)
+    assert store.get(audit["audit_id"]).review_status == RevisionStatus.REQUESTED
+    store.start_revision(new_run)
 
 
 def test_migration_preserves_existing_events(environment, tmp_path):
